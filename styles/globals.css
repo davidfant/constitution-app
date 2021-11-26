@@ -47,6 +47,7 @@ a {
 
 button {
   padding: 1rem;
+  border-radius: 0.25rem;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -57,7 +58,7 @@ button {
 
 .constitution-container {
   padding: 2rem;
-  margin-top: 2rem;
+  margin-top: 3rem;
   margin-bottom: 1rem;
   border: 1px solid var(--color-primary);
   border-radius: 1rem;
