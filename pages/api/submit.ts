@@ -19,16 +19,12 @@ interface RequestData {
   payload: any;
 }
 
-interface ResponseData {
-  name: string
-}
-
 export default async function handler(
-  req: NextApiRequest<RequestData>,
-  res: NextApiResponse<ResponseData>
+  req: NextApiRequest,
+  res: NextApiResponse
 ) {
   if (req.method !== 'POST') {
-    return res.status(404).send();
+    return res.status(404).json({ ok: false });
   }
 
   const validation = requestSchema.validate(req.body);
@@ -48,7 +44,7 @@ export default async function handler(
   const gitRepoPath = path.join(process.cwd(), `constitution-approvals/${Date.now()}`);
   try {
     await SimpleGitPromise().clone(GIT_REPO_URL, gitRepoPath);
-    const git: SimpleGit = SimpleGitPromise({ baseDir: gitRepoPath });
+    const git: SimpleGit = SimpleGitPromise(gitRepoPath);
 
     const fileName = `approvals/${req.body.address}.txt`;
     fs.writeFileSync(`${gitRepoPath}/${fileName}`, JSON.stringify({

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useMemo, useState, useEffect, useCallback, ReactNode, FC } from 'react';
 import Image from 'next/image'
 import { NextPage } from 'next'
 import { ethers } from 'ethers'
@@ -11,10 +11,10 @@ const GITHUB_APPROVALS_URL = 'https://github.com/davidfant/constitution-approval
 interface StepProps {
   index: number;
   label: ReactNode;
-  cta: string;
+  cta?: string;
   active: boolean;
-  enabled: boolean;
-  onClick(): void;
+  enabled?: boolean;
+  onClick?(): void;
 }
 
 const Step: FC<StepProps> = ({index, label, cta, active, enabled, onClick}) => {
@@ -45,7 +45,7 @@ const Home: NextPage = () => {
   const provider = useMemo(
     () =>
       typeof window !== 'undefined'
-      ? new ethers.providers.Web3Provider(window.ethereum, 'mainnet')
+      ? new ethers.providers.Web3Provider((window as any).ethereum, 'mainnet')
       : undefined,
     []);
   const citizenContract = useMemo(() => new ethers.Contract(
@@ -55,6 +55,7 @@ const Home: NextPage = () => {
   ), [provider]);
 
   const connectWallet = useCallback(async () => {
+    if (!provider) return;
     await provider.send('eth_requestAccounts', []);
     const signer = provider.getSigner();
     const address = await signer.getAddress();
@@ -64,12 +65,12 @@ const Home: NextPage = () => {
       CITIZEN_NFT_IDS.map(() => address),
       CITIZEN_NFT_IDS,
     );
-    const count = balances.map(Number).reduce((a, b) => a + b, 0);
+    const count = balances.map(Number).reduce((a: number, b: number) => a + b, 0);
 
     setNftCount(count);
     setAddress(address);
     setStepIndex(1);
-  }, [citizenContract]);
+  }, [citizenContract, provider]);
 
   const submitSignature = useCallback(async (payload: any, signature: string) => {
     const response = await fetch('/api/submit', {
@@ -82,6 +83,7 @@ const Home: NextPage = () => {
   }, [address]);
 
   const approveConstitution = useCallback(async () => {
+    if (!provider) return;
     const payload = {
       message: 'I approve the CityDAO constitution',
       ipfsHash: IPFS_HASH,
@@ -94,7 +96,7 @@ const Home: NextPage = () => {
 
     setStepIndex(2);
     submitSignature(payload, signature);
-  }, [address, submitSignature]);
+  }, [address, submitSignature, provider]);
 
   return (
     <main>
@@ -102,7 +104,7 @@ const Home: NextPage = () => {
         <span className="color-primary">CityDAO</span> Constitution
       </h1>
       <p className="text-center mt-1">
-        Here you can read the CityDAO constitution. If you hold Citizen NFTs you can vote to approve the constitution at the bottom of the page. All approval votes are stored on <a href={GITHUB_APPROVALS_URL} target="_blank">our repo on Github</a>.
+        Here you can read the CityDAO constitution. If you hold Citizen NFTs you can vote to approve the constitution at the bottom of the page. All approval votes are stored on <a href={GITHUB_APPROVALS_URL} target="_blank" rel="noreferrer">our repo on Github</a>.
       </p>
 
       <section className="constitution-container">
@@ -115,9 +117,9 @@ const Home: NextPage = () => {
       </section>
       <section className="text-center">
         <p className="opacity-50">
-          This constitution is stored forever on <a target="_blank" href={`https://ipfs.io/ipfs/${IPFS_HASH}`}>IPFS</a>
+          This constitution is stored forever on <a target="_blank" href={`https://ipfs.io/ipfs/${IPFS_HASH}`} rel="noreferrer">IPFS</a>
         </p>
-        <a target="_blank" href={`https://ipfs.io/ipfs/${IPFS_HASH}`} className="text-sm text-italic opacity-50">
+        <a target="_blank" href={`https://ipfs.io/ipfs/${IPFS_HASH}`} className="text-sm text-italic opacity-50" rel="noreferrer">
           IPFS hash: {IPFS_HASH}
         </a>
       </section>
@@ -141,7 +143,7 @@ const Home: NextPage = () => {
               </p>
               <p className="text-sm text-italic opacity-50">
                 When approving the constitution, you will sign a message with the constitution IPFS hash, and the message signature will be stored in <a href={GITHUB_APPROVALS_URL}
-                target="_blank">this Github project</a>
+                target="_blank" rel="noreferrer">this Github project</a>
               </p>
             </div>
           )}
@@ -164,7 +166,7 @@ const Home: NextPage = () => {
               </p>
               {!!approvalUrl && (
                 <p className="text-sm text-italic opacity-50">
-                  See your approval and signature <a href={approvalUrl} target="_blank">here</a>
+                  See your approval and signature <a href={approvalUrl} target="_blank" rel="noreferrer">here</a>
                 </p>
               )}
             </div>
